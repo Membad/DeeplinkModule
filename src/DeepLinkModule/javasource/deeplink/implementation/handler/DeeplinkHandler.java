@@ -44,7 +44,6 @@ public class DeeplinkHandler extends RequestHandler {
             return;
         }
 		
-		
 		final DeeplinkRequest deepLinkRequest = new DeeplinkRequest(request);
 
 		ISession session = null;
@@ -53,11 +52,17 @@ public class DeeplinkHandler extends RequestHandler {
 		
 		ISession sessionFromRequest = this.getSessionFromRequest(request);
 
-		if(sessionFromRequest==null && !Core.getConfiguration().getEnableGuestLogin())
-		{
-			//Directly serve login page because no request session and no anonymous users allowed
-			ResponseHandler.serveLogin(request,response);
-		}
+		if(sessionFromRequest==null && !Core.getConfiguration().getEnableGuestLogin()) {
+			// Serve index page to bots to fetch meta data for unfurling
+			if (userAgent != null && userAgent.toLowerCase().matches(".*(slackbot|discordbot|facebookexternalhit|twitterbot|linkedinbot|teamsbot|telegrambot|whatsapp|googlebot|bingbot|redditbot|applebot|pinterest).*")) {
+				DeepLink deepLinkConfigurationObject = getDeepLinkConfigurationObject(systemContext, deepLinkRequest.getDeeplinkName());
+				ResponseHandler.serveIndex(request, response, deepLinkConfigurationObject.getIndexPage());
+			} 
+			else {	
+				//Directly serve login page because no request session and no anonymous users allowed
+				ResponseHandler.serveLogin(request,response);
+			}
+		} 
 		else {
 
 			if(sessionFromRequest ==null) {
